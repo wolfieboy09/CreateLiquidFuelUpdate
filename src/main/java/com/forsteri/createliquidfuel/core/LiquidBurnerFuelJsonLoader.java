@@ -1,30 +1,34 @@
 package com.forsteri.createliquidfuel.core;
 
+import com.forsteri.createliquidfuel.CreateLiquidFuel;
 import com.forsteri.createliquidfuel.util.Triplet;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ResourceLocationException;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class LiquidBurnerFuelJsonLoader extends SimpleJsonResourceReloadListener {
-    public static final ResourceLocation IDENTIFIER = ResourceLocation.of("createliquidfuel:drainable_fuel_loader", ':');
+    public static final ResourceLocation IDENTIFIER = ResourceLocation.fromNamespaceAndPath("createliquidfuel", "drainable_fuel_loader");
 
     private static final Gson GSON = new Gson();
 
     public static final LiquidBurnerFuelJsonLoader INSTANCE = new LiquidBurnerFuelJsonLoader();
 
     public LiquidBurnerFuelJsonLoader() {
-        super(GSON, "blaze_burner_fuel");
+        super(GSON, "compat");
     }
 
     @Override
@@ -38,9 +42,9 @@ public class LiquidBurnerFuelJsonLoader extends SimpleJsonResourceReloadListener
 
                 if (fluidElement != null) {
                     try {
-                        Fluid value = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidElement.getAsString()));
-                        if (value != null) {
-                            BurnerStomachHandler.LIQUID_BURNER_FUEL_MAP.put(value,
+                        Optional<Fluid> value = BuiltInRegistries.FLUID.getOptional(ResourceLocation.parse(fluidElement.getAsString()));
+                        if (value.isPresent()) {
+                            BurnerStomachHandler.LIQUID_BURNER_FUEL_MAP.put(value.get(),
                                     Pair.of(
                                             IDENTIFIER,
                                             Triplet.of(
@@ -67,6 +71,5 @@ public class LiquidBurnerFuelJsonLoader extends SimpleJsonResourceReloadListener
                 }
             }
         }
-
     }
 }
