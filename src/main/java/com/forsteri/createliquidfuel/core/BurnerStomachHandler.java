@@ -46,14 +46,12 @@ public class BurnerStomachHandler {
 
         Triplet<Integer, Boolean, Integer> burnerProperty = propertyPair.getSecond();
         if (burnerProperty == null) return;
-        CreateLiquidFuel.LOGGER.warn("Successfully got burnerProperty");
 
         boolean fluidSuperHeats = burnerProperty.getSecond();
 
         int mbConsuming = burnerProperty.getThird();
 
         if (stomach.getFluid().getAmount() < mbConsuming) {
-            CreateLiquidFuel.LOGGER.warn("Ran out of fuel");
             stomach.getFluid().setAmount(0);
             return;
         }
@@ -66,13 +64,11 @@ public class BurnerStomachHandler {
         int newBurnTime = burnerAccessor.createliquidfuel$getRemainingBurnTime() + burnerProperty.getFirst();
 
         if (newBurnTime > BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY) {
-            CreateLiquidFuel.LOGGER.warn("Using burn time first");
             return;
         }
 
         burnerAccessor.createliquidfuel$setRemainingBurnTime(newBurnTime);
 
-        CreateLiquidFuel.LOGGER.warn("Shrinking fuel");
         stomach.getFluid().shrink(mbConsuming);
     }
 
