@@ -1,21 +1,21 @@
 package com.forsteri.createliquidfuel.mixin;
 
 import com.forsteri.createliquidfuel.core.BurnerStomachHandler;
+import com.forsteri.createliquidfuel.core.IHasStomach;
+import com.simibubi.create.content.fluids.tank.FluidTankBlock;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,19 +26,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(value = BlazeBurnerBlockEntity.class, remap = false)
-public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity {
+public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implements IHasStomach {
     @Unique public SmartFluidTank createliquidfuel$stomach;
 
     public MixinBlazeBurnerTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-    @NotNull
-    @Override
-    public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (isFluidHandlerCap(cap))
-            return LazyOptional.of(() -> createliquidfuel$stomach).cast();
-        return super.getCapability(cap, side);
+    @Unique
+    public SmartFluidTank getCapability() {
+        return createliquidfuel$stomach;
     }
 
     @Override
@@ -58,16 +55,16 @@ public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity {
     }
 
     @Inject(method = "read", at = @At("TAIL"))
-    public void read(CompoundTag compound, boolean clientPacket, CallbackInfo ci) {
+    public void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
         if (createliquidfuel$stomach != null) {
-            createliquidfuel$stomach.readFromNBT(compound.getCompound("Stomach"));
+            createliquidfuel$stomach.readFromNBT(registries, compound.getCompound("Stomach"));
         }
     }
 
     @Inject(method = "write", at = @At("TAIL"))
-    public void write(CompoundTag compound, boolean clientPacket, CallbackInfo ci) {
+    public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
         if (createliquidfuel$stomach != null) {
-            compound.put("Stomach", createliquidfuel$stomach.writeToNBT(new CompoundTag()));
+            compound.put("Stomach", createliquidfuel$stomach.writeToNBT(registries, new CompoundTag()));
         }
     }
 

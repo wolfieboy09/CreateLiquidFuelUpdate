@@ -1,5 +1,6 @@
 package com.forsteri.createliquidfuel.core;
 
+import com.forsteri.createliquidfuel.CreateLiquidFuel;
 import com.forsteri.createliquidfuel.mixin.BlazeBurnerAccessor;
 import com.forsteri.createliquidfuel.util.Triplet;
 import com.mojang.datafixers.util.Pair;
@@ -7,13 +8,16 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
@@ -25,20 +29,23 @@ public class BurnerStomachHandler {
     public static void tick(SmartBlockEntity entity) {
         if (!(entity instanceof BlazeBurnerAccessor burnerAccessor)) return;
 
-        @SuppressWarnings("DataFlowIssue")
-        SmartFluidTank stomach = (SmartFluidTank) entity.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
+        SmartFluidTank stomach = (SmartFluidTank) entity.getLevel().getCapability(
+            Capabilities.FluidHandler.BLOCK,
+            entity.getBlockPos(),
+            Direction.DOWN
+        );
 
-        //noinspection ConstantValue
         if (stomach == null)
             return;
 
         if (stomach.getFluid().getAmount() <= 0) return;
 
-        Triplet<Integer, Boolean, Integer> burnerProperty = LIQUID_BURNER_FUEL_MAP.get(
-                stomach.getFluid().getFluid()).getSecond();
+        Pair<ResourceLocation, Triplet<Integer, Boolean, Integer>> propertyPair =
+                LIQUID_BURNER_FUEL_MAP.get(stomach.getFluid().getFluid());
+        if (propertyPair == null) return;
 
-        if (burnerProperty == null)
-            return;
+        Triplet<Integer, Boolean, Integer> burnerProperty = propertyPair.getSecond();
+        if (burnerProperty == null) return;
 
         boolean fluidSuperHeats = burnerProperty.getSecond();
 
@@ -56,26 +63,29 @@ public class BurnerStomachHandler {
 
         int newBurnTime = burnerAccessor.createliquidfuel$getRemainingBurnTime() + burnerProperty.getFirst();
 
-        if (newBurnTime > BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY)
+        if (newBurnTime > BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY) {
             return;
+        }
 
         burnerAccessor.createliquidfuel$setRemainingBurnTime(newBurnTime);
 
         stomach.getFluid().shrink(mbConsuming);
-
     }
 
     public static void tryUpdateFuel(@NotNull SmartBlockEntity entity, ItemStack itemStack, boolean forceOverflow, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
-        @SuppressWarnings("DataFlowIssue")
-        SmartFluidTank stomach = (SmartFluidTank) entity.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
+        SmartFluidTank stomach = (SmartFluidTank) entity.getLevel().getCapability(
+                Capabilities.FluidHandler.BLOCK,
+                entity.getBlockPos(),
+                Direction.DOWN
+        );
 
         //noinspection ConstantValue
         if (stomach == null) return;
 
-        if (!itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent()) return;
+        if (itemStack.getCapability(Capabilities.FluidHandler.ITEM) == null) return;
 
         @SuppressWarnings("DataFlowIssue")
-        IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+        IFluidHandler handler = itemStack.getCapability(Capabilities.FluidHandler.ITEM);
 
         if (!stomach.getFluid().isEmpty() && handler.getFluidInTank(0).getFluid() != stomach.getFluid().getFluid()) return;
 
