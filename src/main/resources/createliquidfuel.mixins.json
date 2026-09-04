@@ -5,7 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "createliquidfuel.refmap.json",
   "mixins": [
-    "BlazeBurnerAccessor",
+    "accessors.BlazeBurnerAccessor",
     "MixinBlazeBurnerTileEntity"
   ],
   "injectors": {

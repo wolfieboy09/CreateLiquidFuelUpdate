@@ -1,7 +1,7 @@
 package com.forsteri.createliquidfuel.core;
 
 import com.forsteri.createliquidfuel.CreateLiquidFuel;
-import com.forsteri.createliquidfuel.mixin.BlazeBurnerAccessor;
+import com.forsteri.createliquidfuel.mixin.accessors.BlazeBurnerAccessor;
 import com.forsteri.createliquidfuel.registry.CLFDataMaps;
 import com.mojang.datafixers.util.Pair;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;

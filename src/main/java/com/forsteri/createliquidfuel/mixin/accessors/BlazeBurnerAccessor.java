@@ -1,4 +1,4 @@
-package com.forsteri.createliquidfuel.mixin;
+package com.forsteri.createliquidfuel.mixin.accessors;
 
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
