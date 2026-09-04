@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     id("idea")
+    id("maven-publish")
     id("net.neoforged.moddev") version "2.0.89"
 }
 
@@ -145,6 +146,25 @@ neoForge.ideSyncTask(generateModMetadata)
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifactId = "${property("mod_id")}"
+        }
+    }
+    repositories {
+        maven {
+            name = "cloudsmith"
+            url = uri("https://maven.cloudsmith.io/wolfieboy09/liquid-fuel-reburned/")
+            credentials {
+                username = "${project.property("cloudsmith.username")}"
+                password = "${project.property("cloudsmith.publishing.apiKey")}"
+            }
+        }
+    }
 }
 
 idea {
