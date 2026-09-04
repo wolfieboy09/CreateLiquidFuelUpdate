@@ -2,8 +2,6 @@ package com.forsteri.createliquidfuel.mixin;
 
 import com.forsteri.createliquidfuel.core.BurnerStomachHandler;
 import com.forsteri.createliquidfuel.core.IHasStomach;
-import com.simibubi.create.content.fluids.tank.FluidTankBlock;
-import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -27,21 +25,22 @@ import java.util.List;
 
 @Mixin(value = BlazeBurnerBlockEntity.class, remap = false)
 public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implements IHasStomach {
-    @Unique public SmartFluidTank createliquidfuel$stomach;
+    @Unique
+    public SmartFluidTank clf$stomach;
 
     public MixinBlazeBurnerTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
+    // Is this really needed?
     @Unique
-    public SmartFluidTank getCapability() {
-        return createliquidfuel$stomach;
+    public SmartFluidTank clf$getCapability() {
+        return clf$stomach;
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        createliquidfuel$stomach = new SmartFluidTank(1000, (FluidStack contents)->{})
-        {
+        clf$stomach = new SmartFluidTank(1000, (s) -> {}) {
             @Override
             public boolean isFluidValid(@NotNull FluidStack stack) {
                 return BurnerStomachHandler.LIQUID_BURNER_FUEL_MAP.containsKey(stack.getFluid());
@@ -56,15 +55,15 @@ public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implem
 
     @Inject(method = "read", at = @At("TAIL"))
     public void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
-        if (createliquidfuel$stomach != null) {
-            createliquidfuel$stomach.readFromNBT(registries, compound.getCompound("Stomach"));
+        if (clf$stomach != null) {
+            clf$stomach.readFromNBT(registries, compound.getCompound("Stomach"));
         }
     }
 
     @Inject(method = "write", at = @At("TAIL"))
     public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
-        if (createliquidfuel$stomach != null) {
-            compound.put("Stomach", createliquidfuel$stomach.writeToNBT(registries, new CompoundTag()));
+        if (clf$stomach != null) {
+            compound.put("Stomach", clf$stomach.writeToNBT(registries, new CompoundTag()));
         }
     }
 

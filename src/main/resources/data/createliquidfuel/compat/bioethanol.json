@@ -1,6 +1,0 @@
-{
-  "fluid": "createaddition:bioethanol",
-  "burnTime": 24,
-  "superHeat": true,
-  "amountConsumedPerTick" : 1
-}

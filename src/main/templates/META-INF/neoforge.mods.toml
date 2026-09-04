@@ -2,32 +2,31 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 [[mods]]
-    modId="${mod_id}"
+    modId="createliquidfuel"
     version="${mod_version}"
     displayName="${mod_name}"
     authors="${mod_authors}"
-    displayTest="IGNORE_SERVER_VERSION"
 
 description='''${mod_description}'''
 
-[[dependencies.${mod_id}]]
+[[dependencies.createliquidfuel]]
     modId="neoforge"
     mandatory=true
     versionRange="${neo_version_range}"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.createliquidfuel]]
     modId="minecraft"
     mandatory=true
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.createliquidfuel]]
     modId="create"
     mandatory=true
-    versionRange="[6.0.4,)"
+    versionRange="[6.0.10,)"
     ordering="NONE"
     side="BOTH"
 

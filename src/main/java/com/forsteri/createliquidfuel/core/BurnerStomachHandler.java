@@ -2,32 +2,50 @@ package com.forsteri.createliquidfuel.core;
 
 import com.forsteri.createliquidfuel.CreateLiquidFuel;
 import com.forsteri.createliquidfuel.mixin.BlazeBurnerAccessor;
-import com.forsteri.createliquidfuel.util.Triplet;
+import com.forsteri.createliquidfuel.registry.CLFDataMaps;
 import com.mojang.datafixers.util.Pair;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.registries.datamaps.DataMapsUpdatedEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class BurnerStomachHandler {
-    public static Map<Fluid, Pair<ResourceLocation, Triplet<Integer, Boolean, Integer>>> LIQUID_BURNER_FUEL_MAP = new HashMap<>();
+    public static final ResourceLocation DATA_MAP_IDENTIFIER = CreateLiquidFuel.asResource("data_map");
+
+    public static Map<Fluid, Pair<ResourceLocation, LiquidFuelEntry>> LIQUID_BURNER_FUEL_MAP = new HashMap<>();
+
+    public static void refreshFuelMap(Registry<Fluid> fluidRegistry) {
+        LIQUID_BURNER_FUEL_MAP.clear();
+
+        fluidRegistry.getDataMap(CLFDataMaps.LIQUID_FUEL).forEach((resourceKey, entry) -> {
+            Fluid fluid = fluidRegistry.get(resourceKey);
+            if (fluid != null) {
+                LIQUID_BURNER_FUEL_MAP.put(fluid, Pair.of(DATA_MAP_IDENTIFIER, entry));
+            }
+        });
+    }
+
+    public static void onDataMapsUpdated(DataMapsUpdatedEvent event) {
+        event.ifRegistry(Registries.FLUID, BurnerStomachHandler::refreshFuelMap);
+    }
 
     public static void tick(SmartBlockEntity entity) {
-        if (!(entity instanceof BlazeBurnerAccessor burnerAccessor)) return;
+        if (entity.getLevel() == null || !(entity instanceof BlazeBurnerAccessor burnerAccessor)) return;
 
         SmartFluidTank stomach = (SmartFluidTank) entity.getLevel().getCapability(
             Capabilities.FluidHandler.BLOCK,
@@ -40,52 +58,48 @@ public class BurnerStomachHandler {
 
         if (stomach.getFluid().getAmount() <= 0) return;
 
-        Pair<ResourceLocation, Triplet<Integer, Boolean, Integer>> propertyPair =
-                LIQUID_BURNER_FUEL_MAP.get(stomach.getFluid().getFluid());
+        Pair<ResourceLocation, LiquidFuelEntry> propertyPair = LIQUID_BURNER_FUEL_MAP.get(stomach.getFluid().getFluid());
         if (propertyPair == null) return;
 
-        Triplet<Integer, Boolean, Integer> burnerProperty = propertyPair.getSecond();
-        if (burnerProperty == null) return;
+        LiquidFuelEntry fuelEntry = propertyPair.getSecond();
+        if (fuelEntry == null) return;
 
-        boolean fluidSuperHeats = burnerProperty.getSecond();
-
-        int mbConsuming = burnerProperty.getThird();
-
-        if (stomach.getFluid().getAmount() < mbConsuming) {
+        if (stomach.getFluid().getAmount() < fuelEntry.amountConsumedPerTick()) {
             stomach.getFluid().setAmount(0);
             return;
         }
 
-        if (fluidSuperHeats)
-            burnerAccessor.createliquidfuel$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.SEETHING);
+        if (fuelEntry.superHeat())
+            burnerAccessor.clf$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.SEETHING);
         else
-            burnerAccessor.createliquidfuel$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.FADING);
+            burnerAccessor.clf$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.FADING);
 
-        int newBurnTime = burnerAccessor.createliquidfuel$getRemainingBurnTime() + burnerProperty.getFirst();
+        int newBurnTime = burnerAccessor.clf$getRemainingBurnTime() + fuelEntry.burnTime();
 
         if (newBurnTime > BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY) {
             return;
         }
 
-        burnerAccessor.createliquidfuel$setRemainingBurnTime(newBurnTime);
+        burnerAccessor.clf$setRemainingBurnTime(newBurnTime);
 
-        stomach.getFluid().shrink(mbConsuming);
+        stomach.getFluid().shrink(fuelEntry.amountConsumedPerTick());
     }
 
     public static void tryUpdateFuel(@NotNull SmartBlockEntity entity, ItemStack itemStack, boolean forceOverflow, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
+        if (entity.getLevel() == null) return;
         SmartFluidTank stomach = (SmartFluidTank) entity.getLevel().getCapability(
                 Capabilities.FluidHandler.BLOCK,
                 entity.getBlockPos(),
                 Direction.DOWN
         );
 
-        //noinspection ConstantValue
         if (stomach == null) return;
 
         if (itemStack.getCapability(Capabilities.FluidHandler.ITEM) == null) return;
 
-        @SuppressWarnings("DataFlowIssue")
         IFluidHandler handler = itemStack.getCapability(Capabilities.FluidHandler.ITEM);
+
+        if (handler == null) return;
 
         if (!stomach.getFluid().isEmpty() && handler.getFluidInTank(0).getFluid() != stomach.getFluid().getFluid()) return;
 

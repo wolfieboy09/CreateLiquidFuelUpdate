@@ -9,11 +9,11 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(value = BlazeBurnerBlockEntity.class, remap = false)
 public interface BlazeBurnerAccessor {
     @Accessor("remainingBurnTime")
-    int createliquidfuel$getRemainingBurnTime();
+    int clf$getRemainingBurnTime();
 
     @Accessor("remainingBurnTime")
-    void createliquidfuel$setRemainingBurnTime(int remainingBurnTime);
+    void clf$setRemainingBurnTime(int remainingBurnTime);
 
     @Invoker("setBlockHeat")
-    void createliquidfuel$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel heat);
+    void clf$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel heat);
 }
