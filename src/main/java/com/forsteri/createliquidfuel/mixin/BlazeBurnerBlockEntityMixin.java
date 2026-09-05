@@ -9,6 +9,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.utility.CreateLang;
+import net.createmod.catnip.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -57,19 +58,43 @@ public abstract class BlazeBurnerBlockEntityMixin extends SmartBlockEntity imple
             totalTicks = Math.max(0, clf$syncedTotalTicks - elapsed);
         }
 
-        if (totalTicks <= 0) return false;
+        FluidStack stomachFluid = clf$stomach.getFluid();
+        if (totalTicks <= 0 && stomachFluid.isEmpty()) return false;
 
-        int totalSeconds = (int) (totalTicks / 20);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-
-        CreateLang.translate("gui.goggles.liquid_fuel.burn_time_left")
-                .style(ChatFormatting.GRAY)
+        CreateLang.translate("gui.goggles.liquid_fuel")
                 .forGoggles(tooltip);
 
-        CreateLang.text(String.format("%d:%02d", minutes, seconds))
-                .style(ChatFormatting.GOLD)
-                .forGoggles(tooltip, 1);
+        if (!stomachFluid.isEmpty()) {
+            LangBuilder mb = CreateLang.translate("generic.unit.millibuckets");
+
+            CreateLang.fluidName(stomachFluid)
+                    .style(ChatFormatting.GRAY)
+                    .forGoggles(tooltip, 1);
+
+            CreateLang.builder()
+                    .add(CreateLang.number(stomachFluid.getAmount())
+                            .add(mb)
+                            .style(ChatFormatting.GOLD))
+                    .text(ChatFormatting.GRAY, " / ")
+                    .add(CreateLang.number(clf$stomach.getCapacity())
+                            .add(mb)
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+        }
+
+        if (totalTicks > 0) {
+            int totalSeconds = (int) (totalTicks / 20);
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+
+            CreateLang.translate("gui.goggles.liquid_fuel.burn_time_left")
+                    .style(ChatFormatting.GRAY)
+                    .forGoggles(tooltip, 1);
+
+            CreateLang.text(String.format("%d:%02d", minutes, seconds))
+                    .style(ChatFormatting.GOLD)
+                    .forGoggles(tooltip, 2);
+                    }
 
         return true;
     }
