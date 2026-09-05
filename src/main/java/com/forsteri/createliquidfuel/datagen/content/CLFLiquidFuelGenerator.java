@@ -1,11 +1,10 @@
 package com.forsteri.createliquidfuel.datagen.content;
 
 import com.forsteri.createliquidfuel.CreateLiquidFuel;
+import com.forsteri.createliquidfuel.core.CLFTags;
 import com.forsteri.createliquidfuel.core.datagen.LiquidFuelProvider;
-import com.mrh0.createaddition.index.CAFluids;
 import net.dakotapride.garnished.registry.GarnishedFluids;
 import net.minecraft.data.PackOutput;
-import net.minecraft.world.level.material.Fluids;
 
 public class CLFLiquidFuelGenerator extends LiquidFuelProvider {
     public CLFLiquidFuelGenerator(PackOutput output) {
@@ -14,14 +13,14 @@ public class CLFLiquidFuelGenerator extends LiquidFuelProvider {
 
     @Override
     protected void generate() {
-        add(Fluids.LAVA)
+        add(CLFTags.LAVA)
                 .burnTime(20);
 
-        add(CAFluids.BIOETHANOL.get())
+        add(CLFTags.BIOFUEL)
                 .burnTime(24)
                 .superHeats();
 
-        add(CAFluids.SEED_OIL.get())
+        add(CLFTags.PLANT_OIL)
                 .burnTime(10)
                 .consumedPerTick(2);
 
