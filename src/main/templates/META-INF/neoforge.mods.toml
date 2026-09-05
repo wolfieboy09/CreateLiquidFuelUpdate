@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="MIT NON-AI"
+issueTrackerURL="https://github.com/wolfieboy09/CreateLiquidFuelUpdate/issues"
 [[mods]]
     modId="createliquidfuel"
     version="${mod_version}"
