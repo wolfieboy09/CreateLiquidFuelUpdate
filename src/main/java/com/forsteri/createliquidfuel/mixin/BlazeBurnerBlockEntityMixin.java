@@ -94,14 +94,14 @@ public abstract class BlazeBurnerBlockEntityMixin extends SmartBlockEntity imple
             CreateLang.text(String.format("%d:%02d", minutes, seconds))
                     .style(ChatFormatting.GOLD)
                     .forGoggles(tooltip, 2);
-                    }
+        }
 
         return true;
     }
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        clf$stomach = new SmartFluidTank(1000, (s) -> {}) {
+        clf$stomach = new SmartFluidTank(1000, (s) -> sendData()) {
             @Override
             public boolean isFluidValid(@NotNull FluidStack stack) {
                 return BurnerStomachHandler.getFuelEntry(stack.getFluid()) != null;
