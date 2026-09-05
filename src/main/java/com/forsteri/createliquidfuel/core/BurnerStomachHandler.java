@@ -21,6 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 
 public class BurnerStomachHandler {
+    // Maybe make a config?
+    private static final double KINDLED_THRESHOLD = 0.0125;
+
     public static void tick(SmartBlockEntity entity) {
         if (entity.getLevel() == null || entity.getLevel().isClientSide
                 || !(entity instanceof BlazeBurnerAccessor burnerAccessor)
@@ -36,52 +39,83 @@ public class BurnerStomachHandler {
 
         if (stomach.getFluid().getAmount() > 0) {
             LiquidFuelEntry fuelEntry = getFuelEntry(stomach.getFluid().getFluid());
+
             if (fuelEntry != null) {
                 hasFuel = true;
+
                 if (stomach.getFluid().getAmount() < fuelEntry.amountConsumedPerTick()) {
                     stomach.getFluid().setAmount(0);
                 } else {
-                    burnerAccessor.clf$invokeSetBlockHeat(
-                            fuelEntry.superHeats()
-                                    ? BlazeBurnerBlock.HeatLevel.SEETHING
-                                    : BlazeBurnerBlock.HeatLevel.FADING
-                    );
-
                     int newBurnTime = Math.min(
                             burnerAccessor.clf$getRemainingBurnTime() + fuelEntry.burnTime(),
                             BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY
                     );
+
                     burnerAccessor.clf$setRemainingBurnTime(newBurnTime);
                     stomach.getFluid().shrink(fuelEntry.amountConsumedPerTick());
+
+                    BlazeBurnerBlock.HeatLevel heatLevel;
+
+                    if (fuelEntry.superHeats()) {
+                        heatLevel = BlazeBurnerBlock.HeatLevel.SEETHING;
+                    } else {
+                        long totalBurnTicks = computeTotalBurnTicks(
+                                stomach,
+                                newBurnTime
+                        );
+
+                        double burnPercent =
+                                (double) totalBurnTicks
+                                        / BlazeBurnerBlockEntity.MAX_HEAT_CAPACITY;
+
+                        heatLevel = burnPercent < KINDLED_THRESHOLD
+                                ? BlazeBurnerBlock.HeatLevel.FADING
+                                : BlazeBurnerBlock.HeatLevel.KINDLED;
+                    }
+
+                    burnerAccessor.clf$invokeSetBlockHeat(heatLevel);
                 }
             }
         }
 
-        // Fire a final sync even on the tick where fuel/burn time drops to zero,
-        // so the client's snapshot gets corrected down to exactly 0 rather than
-        // being left stuck on the last positive value it received.
         boolean stateStillActive = hasFuel || burnerAccessor.clf$getRemainingBurnTime() > 0;
         if ((stateStillActive || hadBurnTime) && entity.getLevel().getGameTime() % 4 == 0)
             entity.sendData();
     }
 
-    public static void tryUpdateFuel(@NotNull SmartBlockEntity entity, ItemStack itemStack, boolean forceOverflow, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
-        if (entity.getLevel() == null || !(entity instanceof IHasStomach hasStomach)) return;
+    public static void tryUpdateFuel(
+            @NotNull SmartBlockEntity entity,
+            ItemStack itemStack,
+            boolean forceOverflow,
+            boolean simulate,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (entity.getLevel() == null || !(entity instanceof IHasStomach hasStomach))
+            return;
 
         SmartFluidTank stomach = hasStomach.getCapability();
-        if (stomach == null) return;
+        if (stomach == null)
+            return;
 
         IFluidHandler handler = itemStack.getCapability(Capabilities.FluidHandler.ITEM);
-        if (handler == null) return;
+        if (handler == null)
+            return;
 
-        if (!stomach.getFluid().isEmpty() && handler.getFluidInTank(0).getFluid() != stomach.getFluid().getFluid()) return;
+        if (!stomach.getFluid().isEmpty()
+                && handler.getFluidInTank(0).getFluid() != stomach.getFluid().getFluid())
+            return;
 
-        if (handler.getTanks() != 1) return;
+        if (handler.getTanks() != 1)
+            return;
+
         FluidStack fluidStack = handler.getFluidInTank(0);
-        if (fluidStack.isEmpty() || getFuelEntry(fluidStack.getFluid()) == null) return;
+
+        if (fluidStack.isEmpty() || getFuelEntry(fluidStack.getFluid()) == null)
+            return;
 
         if (stomach.getFluid().getAmount() + fluidStack.getAmount() > stomach.getCapacity()) {
-            if (!forceOverflow) return;
+            if (!forceOverflow)
+                return;
         }
 
         if (!simulate) {
@@ -89,6 +123,7 @@ public class BurnerStomachHandler {
                 stomach.setFluid(fluidStack.copy());
             else
                 stomach.getFluid().grow(fluidStack.getAmount());
+
             if (!entity.getLevel().isClientSide)
                 entity.sendData();
         }
@@ -96,25 +131,44 @@ public class BurnerStomachHandler {
         cir.setReturnValue(true);
     }
 
-    public static long computeTotalBurnTicks(@Nullable SmartFluidTank stomach, int remainingBurnTime) {
+    public static long computeTotalBurnTicks(
+            @Nullable SmartFluidTank stomach,
+            int remainingBurnTime
+    ) {
         long totalTicks = remainingBurnTime;
+
         if (stomach != null && !stomach.isEmpty()) {
             LiquidFuelEntry fuelEntry = getFuelEntry(stomach.getFluid().getFluid());
-            if (fuelEntry != null)
-                totalTicks += ((long) stomach.getFluid().getAmount() / Math.max(1, fuelEntry.amountConsumedPerTick()))
-                        * fuelEntry.burnTime();
+
+            if (fuelEntry != null) {
+                totalTicks += (
+                        (long) stomach.getFluid().getAmount()
+                                / Math.max(1, fuelEntry.amountConsumedPerTick())
+                ) * fuelEntry.burnTime();
+            }
         }
+
         return totalTicks;
     }
 
     @Nullable
     public static LiquidFuelEntry getFuelEntry(Fluid fluid) {
-        Map<ResourceKey<Fluid>, LiquidFuelEntry> dataMap = BuiltInRegistries.FLUID.getDataMap(CLFDataMaps.LIQUID_FUEL);
-        ResourceKey<Fluid> key = BuiltInRegistries.FLUID.getResourceKey(fluid).orElse(null);
+        Map<ResourceKey<Fluid>, LiquidFuelEntry> dataMap =
+                BuiltInRegistries.FLUID.getDataMap(CLFDataMaps.LIQUID_FUEL);
+
+        ResourceKey<Fluid> key =
+                BuiltInRegistries.FLUID.getResourceKey(fluid).orElse(null);
+
         LiquidFuelEntry entry = dataMap.get(key);
-        Fluid still = FluidHelper.convertToStill(new FluidStack(fluid, 1).getFluid());
+
+        Fluid still =
+                FluidHelper.convertToStill(new FluidStack(fluid, 1).getFluid());
+
         if (entry == null && still != fluid)
-            entry = dataMap.get(BuiltInRegistries.FLUID.getResourceKey(still).orElse(null));
+            entry = dataMap.get(
+                    BuiltInRegistries.FLUID.getResourceKey(still).orElse(null)
+            );
+
         return entry;
     }
 }
