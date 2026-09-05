@@ -1,4 +1,10 @@
 {
   "create.gui.goggles.liquid_fuel": "Liquid Fuel:",
-  "create.gui.goggles.liquid_fuel.burn_time_left": "Remaining Burn Time"
+  "create.gui.goggles.liquid_fuel.burn_time_left": "Remaining Burn Time",
+  "createliquidfuel.jei.category.liquid_fuel": "Liquid Fuel",
+  "createliquidfuel.jei.info.burn_time": "Burns for %sm",
+  "createliquidfuel.jei.info.consumed_per_tick": "Consumed Per Tick: %s mB",
+  "createliquidfuel.jei.info.superheats": "Superheats: %s",
+  "createliquidfuel.jei.info.yes": "yes",
+  "createliquidfuel.jei.info.no": "no"
 }
