@@ -41,10 +41,11 @@ public class BurnerStomachHandler {
                 if (stomach.getFluid().getAmount() < fuelEntry.amountConsumedPerTick()) {
                     stomach.getFluid().setAmount(0);
                 } else {
-                    if (fuelEntry.superHeats())
-                        burnerAccessor.clf$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.SEETHING);
-                    else
-                        burnerAccessor.clf$invokeSetBlockHeat(BlazeBurnerBlock.HeatLevel.FADING);
+                    burnerAccessor.clf$invokeSetBlockHeat(
+                            fuelEntry.superHeats()
+                                    ? BlazeBurnerBlock.HeatLevel.SEETHING
+                                    : BlazeBurnerBlock.HeatLevel.FADING
+                    );
 
                     int newBurnTime = Math.min(
                             burnerAccessor.clf$getRemainingBurnTime() + fuelEntry.burnTime(),
