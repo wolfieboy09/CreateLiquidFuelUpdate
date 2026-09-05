@@ -12,8 +12,6 @@ import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
-import java.util.Map;
-
 public final class KubeBridge {
     private KubeBridge() {
     }
@@ -34,22 +32,22 @@ public final class KubeBridge {
         }
 
         generator.dataMap(CLFDataMaps.LIQUID_FUEL, file -> {
-            for (Map.Entry<Either<Fluid, TagKey<Fluid>>, LiquidFuelBuilder> entry : modification.getFuelsToAdd().entrySet()) {
-                entry.getKey().ifLeft(fluid -> {
+            for (LiquidFuelBuilder builder : modification.getFuelsToAdd().values()) {
+                builder.getKey().ifLeft(fluid -> {
                     Fluid normalized = normalize(fluid);
                     if (isValid(normalized)) {
-                        file.add(normalized, entry.getValue().build());
+                        file.add(normalized, builder.build());
                     }
-                }).ifRight(tag -> file.addTag(tag, entry.getValue().build()));
+                }).ifRight(tag -> file.addTag(tag, builder.build()));
             }
 
-            for (Map.Entry<Either<Fluid, TagKey<Fluid>>, LiquidFuelBuilder> entry : modification.getFuelsToModify().entrySet()) {
-                entry.getKey().ifLeft(fluid -> {
+            for (LiquidFuelBuilder builder : modification.getFuelsToModify().values()) {
+                builder.getKey().ifLeft(fluid -> {
                     Fluid normalized = normalize(fluid);
                     if (isValid(normalized)) {
-                        file.add(normalized, entry.getValue().build(), true);
+                        file.add(normalized, builder.build(), true);
                     }
-                }).ifRight(tag -> file.addTag(tag, entry.getValue().build(), true));
+                }).ifRight(tag -> file.addTag(tag, builder.build(), true));
             }
 
             for (Either<Fluid, TagKey<Fluid>> key : modification.getFuelsToRemove()) {

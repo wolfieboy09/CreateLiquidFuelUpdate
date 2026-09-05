@@ -1,34 +1,35 @@
 package com.forsteri.createliquidfuel.integration.kubejs.events.handlers;
 
 import com.forsteri.createliquidfuel.core.LiquidFuelEntry;
+import com.mojang.datafixers.util.Either;
 import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.rhino.util.HideFromJS;
 import dev.latvian.mods.rhino.util.ReturnsSelf;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.material.Fluid;
-import org.jetbrains.annotations.Nullable;
 
 public class LiquidFuelBuilder {
-    private transient final @Nullable Fluid fluid;
+    private transient final Either<Fluid, TagKey<Fluid>> key;
     private transient int burnTime = 10;
     private transient int consumptionPerTick = 1;
     private transient boolean superHeats = false;
 
     @HideFromJS
-    public LiquidFuelBuilder(@Nullable Fluid fluid) {
-        this.fluid = fluid;
+    public LiquidFuelBuilder(Either<Fluid, TagKey<Fluid>> key) {
+        this.key = key;
     }
 
     @HideFromJS
-    public LiquidFuelBuilder(@Nullable Fluid fluid, LiquidFuelEntry entry) {
-        this.fluid = fluid;
+    public LiquidFuelBuilder(Either<Fluid, TagKey<Fluid>> key, LiquidFuelEntry entry) {
+        this.key = key;
         this.burnTime = entry.burnTime();
         this.consumptionPerTick = entry.amountConsumedPerTick();
         this.superHeats = entry.superHeats();
     }
 
     @HideFromJS
-    public @Nullable Fluid getFluid() {
-        return this.fluid;
+    public Either<Fluid, TagKey<Fluid>> getKey() {
+        return this.key;
     }
 
     @Info("How many ticks of burn time each consumed mB of this fluid provides")

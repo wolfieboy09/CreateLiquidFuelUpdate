@@ -40,7 +40,7 @@ public class LiquidFuelModification implements KubeEvent {
 
     public LiquidFuelBuilder create(KubeResourceLocation id) {
         Either<Fluid, TagKey<Fluid>> key = resolve(id.wrapped());
-        LiquidFuelBuilder builder = key.map(LiquidFuelBuilder::new, tag -> new LiquidFuelBuilder(null));
+        LiquidFuelBuilder builder = new LiquidFuelBuilder(key);
         this.fuelsToAdd.put(key, builder);
         return builder;
     }
@@ -48,11 +48,7 @@ public class LiquidFuelModification implements KubeEvent {
     public LiquidFuelBuilder modify(KubeResourceLocation id) {
         Either<Fluid, TagKey<Fluid>> key = resolve(id.wrapped());
         LiquidFuelEntry current = key.map(LiquidFuelModification::currentEntry, DEFAULT_TAG_FUELS::get);
-
-        LiquidFuelBuilder builder = key.map(
-                fluid -> current == null ? new LiquidFuelBuilder(fluid) : new LiquidFuelBuilder(fluid, current),
-                tag -> current == null ? new LiquidFuelBuilder(null) : new LiquidFuelBuilder(null, current)
-        );
+        LiquidFuelBuilder builder = current == null ? new LiquidFuelBuilder(key) : new LiquidFuelBuilder(key, current);
         this.fuelsToModify.put(key, builder);
         return builder;
     }
