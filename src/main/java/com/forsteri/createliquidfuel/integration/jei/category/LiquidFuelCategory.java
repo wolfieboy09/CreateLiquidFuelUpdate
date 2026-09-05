@@ -3,8 +3,13 @@ package com.forsteri.createliquidfuel.integration.jei.category;
 import com.forsteri.createliquidfuel.CreateLiquidFuel;
 import com.forsteri.createliquidfuel.core.LiquidFuelEntry;
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.compat.jei.category.animations.AnimatedBlazeBurner;
+import com.simibubi.create.content.processing.recipe.HeatCondition;
+import com.simibubi.create.foundation.gui.AllGuiTextures;
+import com.simibubi.create.foundation.utility.CreateLang;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -12,6 +17,8 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.AbstractRecipeCategory;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
@@ -21,19 +28,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 public class LiquidFuelCategory extends AbstractRecipeCategory<LiquidFuelCategory.FuelRecipe> {
-    public static final RecipeType<FuelRecipe> RECIPE_TYPE =
-            RecipeType.create(CreateLiquidFuel.MOD_ID, "liquid_fuel", FuelRecipe.class);
+    public static final RecipeType<FuelRecipe> RECIPE_TYPE = RecipeType.create(CreateLiquidFuel.MOD_ID, "liquid_fuel", FuelRecipe.class);
 
-    private static final int WIDTH = 172;
-    private static final int HEIGHT = 36;
+    private final AnimatedBlazeBurner blazeBurner = new AnimatedBlazeBurner();
 
     public LiquidFuelCategory(IGuiHelper guiHelper) {
         super(
                 RECIPE_TYPE,
                 Component.translatable("createliquidfuel.jei.category.liquid_fuel"),
                 blazeBurnerIcon(guiHelper),
-                WIDTH,
-                HEIGHT
+                190,
+                60
         );
     }
 
@@ -44,9 +49,12 @@ public class LiquidFuelCategory extends AbstractRecipeCategory<LiquidFuelCategor
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, FuelRecipe recipe, IFocusGroup focuses) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 1, 1)
+        builder.addSlot(RecipeIngredientRole.INPUT, 75, 5)
                 .addFluidStack(recipe.fluid(), FluidType.BUCKET_VOLUME)
                 .setStandardSlotBackground();
+
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT)
+                .addFluidStack(recipe.fluid(), FluidType.BUCKET_VOLUME);
     }
 
     @Override
@@ -56,25 +64,27 @@ public class LiquidFuelCategory extends AbstractRecipeCategory<LiquidFuelCategor
         int ticksPerBucket = fuel.burnTime() * 1000 / Math.max(1, fuel.amountConsumedPerTick());
         int secondsPerBucket = ticksPerBucket / 20;
 
-        addLine(builder, 24, 4, Component.translatable(
-                "createliquidfuel.jei.info.burn_time",
-                Component.literal(String.format("%02d", secondsPerBucket / 60))
-                        .withStyle(ChatFormatting.YELLOW)).withStyle(ChatFormatting.WHITE));
-
-        addLine(builder, 24, 15, Component.translatable(
-                "createliquidfuel.jei.info.consumed_per_tick",
-                Component.literal(String.valueOf(fuel.amountConsumedPerTick())).withStyle(ChatFormatting.BLUE)).withStyle(ChatFormatting.WHITE));
-
-        addLine(builder, 24, 26, Component.translatable(
-                "createliquidfuel.jei.info.superheats",
-                Component.translatable(fuel.superHeats() ? "createliquidfuel.jei.info.yes" : "createliquidfuel.jei.info.no")
-                        .withStyle(fuel.superHeats() ? ChatFormatting.BLUE : ChatFormatting.RED)).withStyle(ChatFormatting.WHITE));
+        builder.addText(Component.literal(String.format("%02dm", secondsPerBucket / 60)).withStyle(ChatFormatting.YELLOW), 114, 12)
+                .setPosition(145, 35)
+                .setShadow(true);
     }
 
-    private static void addLine(IRecipeExtrasBuilder builder, int x, int y, Component component) {
-        builder.addText(component, 140, 12)
-                .setPosition(x, y)
-                .setShadow(true);
+    @Override
+    public void draw(FuelRecipe recipe, IRecipeSlotsView slotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+        AllGuiTextures.JEI_HEAT_BAR.render(graphics, 8, 30);
+        AllGuiTextures.JEI_LIGHT.render(graphics, 85, 40);
+        AllGuiTextures.JEI_DOWN_ARROW.render(graphics, 95, 5);
+
+        HeatCondition requiredHeat = recipe.fuel().superHeats() ? HeatCondition.SUPERHEATED : HeatCondition.HEATED;
+
+        graphics.drawString(
+                Minecraft.getInstance().font,
+                CreateLang.translateDirect(requiredHeat.getTranslationKey()),
+                13, 35,
+                requiredHeat.getColor()
+        );
+
+        blazeBurner.withHeat(requiredHeat.visualizeAsBlazeBurner()).draw(graphics, 95, 8);
     }
 
     public record FuelRecipe(Fluid fluid, LiquidFuelEntry fuel) {
