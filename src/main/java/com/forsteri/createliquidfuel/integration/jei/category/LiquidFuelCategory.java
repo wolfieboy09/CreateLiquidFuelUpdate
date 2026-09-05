@@ -65,8 +65,7 @@ public class LiquidFuelCategory extends AbstractRecipeCategory<LiquidFuelCategor
         int secondsPerBucket = ticksPerBucket / 20;
 
         builder.addText(Component.literal(String.format("%02dm", secondsPerBucket / 60)).withStyle(ChatFormatting.YELLOW), 114, 12)
-                .setPosition(145, 35)
-                .setShadow(true);
+                .setPosition(145, 35);
     }
 
     @Override
