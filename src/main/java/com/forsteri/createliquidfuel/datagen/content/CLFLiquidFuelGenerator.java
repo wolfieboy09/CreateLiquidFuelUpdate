@@ -15,7 +15,6 @@ public class CLFLiquidFuelGenerator extends LiquidFuelProvider {
     @Override
     protected void generate() {
         add(Fluids.LAVA)
-                .superHeats()
                 .burnTime(20);
 
         add(CAFluids.BIOETHANOL.get())

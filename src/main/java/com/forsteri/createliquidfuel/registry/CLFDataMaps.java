@@ -9,7 +9,7 @@ import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 
 public class CLFDataMaps {
     public static final DataMapType<Fluid, LiquidFuelEntry> LIQUID_FUEL = DataMapType.builder(
-            CreateLiquidFuel.asResource("createliquidfuel"),
+            CreateLiquidFuel.asResource("blaze_burner_fuel"),
             Registries.FLUID,
             LiquidFuelEntry.CODEC
     ).synced(

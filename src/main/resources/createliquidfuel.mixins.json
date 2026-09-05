@@ -6,7 +6,7 @@
   "refmap": "createliquidfuel.refmap.json",
   "mixins": [
     "accessors.BlazeBurnerAccessor",
-    "MixinBlazeBurnerTileEntity"
+    "BlazeBurnerBlockEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

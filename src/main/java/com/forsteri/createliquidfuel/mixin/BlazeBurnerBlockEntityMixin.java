@@ -2,13 +2,18 @@ package com.forsteri.createliquidfuel.mixin;
 
 import com.forsteri.createliquidfuel.core.BurnerStomachHandler;
 import com.forsteri.createliquidfuel.core.IHasStomach;
+import com.forsteri.createliquidfuel.mixin.accessors.BlazeBurnerAccessor;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
+import com.simibubi.create.foundation.utility.CreateLang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,18 +29,49 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(value = BlazeBurnerBlockEntity.class, remap = false)
-public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implements IHasStomach {
+public abstract class BlazeBurnerBlockEntityMixin extends SmartBlockEntity implements IHasStomach, IHaveGoggleInformation {
     @Unique
     public SmartFluidTank clf$stomach;
 
-    public MixinBlazeBurnerTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+    @Unique
+    private long clf$syncedTotalTicks;
+    @Unique
+    private long clf$syncedGameTime;
+
+    public BlazeBurnerBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-    // Is this really needed?
-    @Unique
-    public SmartFluidTank clf$getCapability() {
+    @Override
+    public SmartFluidTank getCapability() {
         return clf$stomach;
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (clf$stomach == null) return false;
+
+        long totalTicks = clf$syncedTotalTicks;
+        if (getLevel() != null) {
+            long elapsed = getLevel().getGameTime() - clf$syncedGameTime;
+            totalTicks = Math.max(0, clf$syncedTotalTicks - elapsed);
+        }
+
+        if (totalTicks <= 0) return false;
+
+        int totalSeconds = (int) (totalTicks / 20);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        CreateLang.translate("gui.goggles.liquid_fuel.burn_time_left")
+                .style(ChatFormatting.GRAY)
+                .forGoggles(tooltip);
+
+        CreateLang.text(String.format("%d:%02d", minutes, seconds))
+                .style(ChatFormatting.GOLD)
+                .forGoggles(tooltip, 1);
+
+        return true;
     }
 
     @Override
@@ -43,7 +79,7 @@ public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implem
         clf$stomach = new SmartFluidTank(1000, (s) -> {}) {
             @Override
             public boolean isFluidValid(@NotNull FluidStack stack) {
-                return BurnerStomachHandler.LIQUID_BURNER_FUEL_MAP.containsKey(stack.getFluid());
+                return BurnerStomachHandler.getFuelEntry(stack.getFluid()) != null;
             }
         };
     }
@@ -58,6 +94,10 @@ public abstract class MixinBlazeBurnerTileEntity extends SmartBlockEntity implem
         if (clf$stomach != null) {
             clf$stomach.readFromNBT(registries, compound.getCompound("Stomach"));
         }
+
+        int remaining = ((BlazeBurnerAccessor) this).clf$getRemainingBurnTime();
+        clf$syncedTotalTicks = BurnerStomachHandler.computeTotalBurnTicks(clf$stomach, remaining);
+        clf$syncedGameTime = getLevel() != null ? getLevel().getGameTime() : 0;
     }
 
     @Inject(method = "write", at = @At("TAIL"))

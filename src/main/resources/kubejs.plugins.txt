@@ -1,0 +1,1 @@
+com.forsteri.createliquidfuel.integration.kubejs.CLFKubePlugin createliquidfuel

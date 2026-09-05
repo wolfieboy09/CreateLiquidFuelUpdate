@@ -6,6 +6,7 @@ plugins {
 }
 
 val baseArchivesName = project.property("mod_id").toString()
+
 base {
     archivesName.set(project.property("mod_id").toString())
 }
@@ -91,15 +92,23 @@ sourceSets {
 }
 
 repositories {
-    flatDir {
-        dirs("lib")
-    }
     mavenLocal()
     mavenCentral()
     maven("https://maven.createmod.net") // Create, Ponder, Flywheel
     maven("https://mvn.devos.one/snapshots") // Registrate
     maven("https://raw.githubusercontent.com/Fuzss/modresources/main/maven/") // ForgeConfigAPIPort
     maven("https://api.modrinth.com/maven")
+    maven("https://maven.latvian.dev/releases") {
+        content {
+            includeGroup("dev.latvian.mods")
+            includeGroup("dev.latvian.apps")
+        }
+    }
+    maven("https://jitpack.io") {
+        content {
+            includeGroup("com.github.rtyley")
+        }
+    }
 }
 
 dependencies {
@@ -112,6 +121,9 @@ dependencies {
 
     implementation("maven.modrinth:createaddition:neoforge-1.21.1-1.7.0")
     implementation("maven.modrinth:create-garnished:2.1.9.2+1.21.1-neoforged")
+
+    api("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
+    interfaceInjectionData("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
 }
 
 val generateModMetadata by tasks.registering(ProcessResources::class) {
@@ -127,7 +139,8 @@ val generateModMetadata by tasks.registering(ProcessResources::class) {
         "mod_version" to project.findProperty("mod_version") as String,
         "mod_authors" to project.findProperty("mod_authors") as String,
         "mod_credits" to project.findProperty("mod_credits") as String,
-        "mod_description" to project.findProperty("mod_description") as String
+        "mod_description" to project.findProperty("mod_description") as String,
+        "kubejs_version" to project.findProperty("kubejs_version") as String
     )
     inputs.properties(replaceProperties)
     expand(replaceProperties)

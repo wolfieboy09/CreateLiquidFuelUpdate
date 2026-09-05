@@ -1,0 +1,20 @@
+{
+  "values": {
+    "createaddition:bioethanol": {
+      "burnTime": 24,
+      "superHeat": true
+    },
+    "createaddition:seed_oil": {
+      "amountConsumedPerTick": 2,
+      "burnTime": 10
+    },
+    "garnished:peanut_oil": {
+      "amountConsumedPerTick": 2,
+      "burnTime": 10,
+      "superHeat": true
+    },
+    "minecraft:lava": {
+      "burnTime": 20
+    }
+  }
+}

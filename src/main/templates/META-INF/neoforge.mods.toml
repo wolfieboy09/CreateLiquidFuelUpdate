@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
-license="${mod_license}"
+license="MIT NON-AI"
 [[mods]]
     modId="createliquidfuel"
     version="${mod_version}"
@@ -11,24 +11,31 @@ description='''${mod_description}'''
 
 [[dependencies.createliquidfuel]]
     modId="neoforge"
-    mandatory=true
+    type="required"
     versionRange="${neo_version_range}"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.createliquidfuel]]
     modId="minecraft"
-    mandatory=true
+    type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.createliquidfuel]]
     modId="create"
-    mandatory=true
+    type="required"
     versionRange="[6.0.10,)"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies.createliquidfuel]]
+    modId="kubejs"
+    type="optional"
+    versionRange="[${kubejs_version},)"
+    ordering="NONE"
+    side="SERVER"
 
 [[mixins]]
 config = "createliquidfuel.mixins.json"
