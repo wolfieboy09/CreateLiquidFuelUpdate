@@ -109,6 +109,7 @@ repositories {
             includeGroup("com.github.rtyley")
         }
     }
+    maven("https://maven.blamejared.com/")
 }
 
 dependencies {
@@ -121,6 +122,9 @@ dependencies {
 
     implementation("maven.modrinth:createaddition:neoforge-1.21.1-1.7.0")
     implementation("maven.modrinth:create-garnished:2.1.9.2+1.21.1-neoforged")
+
+    compileOnly("mezz.jei:jei-${property("minecraft_version")}-neoforge-api:${property("jei_version")}")
+    runtimeOnly("mezz.jei:jei-${property("minecraft_version")}-neoforge:${property("jei_version")}")
 
     api("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
     interfaceInjectionData("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
