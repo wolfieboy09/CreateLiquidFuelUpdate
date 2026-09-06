@@ -2,7 +2,7 @@ Contributions to Create: Liquid Fuel Reburned are always welcome, be they issues
 
 # No AI/LLM Policy
 
-Create: TFMG Community Edition will not accept contributions made with the assistance of generative AI *no matter the form or extent*.
+Create: Liquid Fuel Reburned will not accept contributions made with the assistance of generative AI *no matter the form or extent*.
 
 Pull requests which violate this policy
 
