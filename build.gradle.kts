@@ -120,13 +120,15 @@ dependencies {
 
     implementation("com.tterrag.registrate:Registrate:${property("registrate_version")}")
 
-    implementation("maven.modrinth:createaddition:neoforge-1.21.1-1.7.0")
-    implementation("maven.modrinth:create-garnished:2.1.9.2+1.21.1-neoforged")
+    compileOnly("maven.modrinth:createaddition:neoforge-1.21.1-1.7.0")
+
+    compileOnly("maven.modrinth:create-garnished:2.1.9.2+1.21.1-neoforged")
 
     compileOnly("mezz.jei:jei-${property("minecraft_version")}-neoforge-api:${property("jei_version")}")
     runtimeOnly("mezz.jei:jei-${property("minecraft_version")}-neoforge:${property("jei_version")}")
 
-    api("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
+    runtimeOnly("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
+    compileOnly("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
     interfaceInjectionData("dev.latvian.mods:kubejs-neoforge:${property("kubejs_version")}")
 }
 
