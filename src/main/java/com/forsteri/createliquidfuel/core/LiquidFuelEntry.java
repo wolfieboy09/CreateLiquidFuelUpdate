@@ -23,6 +23,6 @@ public record LiquidFuelEntry(
         return "LiquidFuelBurner[" +
                 ", burnTime=" + burnTime +
                 ", amountConsumedPerTick=" + amountConsumedPerTick +
-                ", superHeats=" + superHeats;
+                ", superHeats=" + superHeats + "]";
     }
 }
