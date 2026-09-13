@@ -4,7 +4,7 @@ license="MIT NON-AI"
 issueTrackerURL="https://github.com/wolfieboy09/CreateLiquidFuelUpdate/issues"
 [[mods]]
     modId="createliquidfuel"
-    version="${mod_version}"
+    version="${mod_version}-1.21.1"
     displayName="${mod_name}"
     authors="${mod_authors}"
     logoFile="reburned.png"
